@@ -1,0 +1,12 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# rsconnect deployment metadata (optional to commit)
+rsconnect/
+
+# OS
+.DS_Store
+Thumbs.db

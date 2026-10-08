@@ -1,0 +1,12 @@
+install.packages(c(
+  "shiny",
+  "bslib",
+  "bsicons",
+  "DBI",
+  "RPostgres",
+  "dplyr",
+  "tidyr",
+  "ggplot2",
+  "scales",
+  "DT"
+))
