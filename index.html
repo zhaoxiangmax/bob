@@ -53,6 +53,15 @@
   .bar-bg { background: #f3f4f6; border-radius: 4px; height: 8px; flex: 1; overflow: hidden; }
   .bar-fill { background: #3b82d4; height: 100%; border-radius: 4px; }
 
+  .brand-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+  .brand-row:last-child { border-bottom: none; }
+  .brand-logo { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; border: 1px solid #e5e7eb; padding: 3px; background: #fff; flex-shrink: 0; }
+  .brand-fallback { width: 32px; height: 32px; border-radius: 6px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #57606a; flex-shrink: 0; }
+  .brand-name { width: 76px; font-weight: 600; font-size: 13px; flex-shrink: 0; }
+  .brand-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 10px; overflow: hidden; }
+  .brand-bar-fill { background: linear-gradient(90deg, #3b82d4, #7c5cd8); height: 100%; border-radius: 4px; }
+  .brand-rev { width: 68px; text-align: right; font-size: 12px; color: #57606a; flex-shrink: 0; }
+
   footer { text-align: center; padding: 24px; font-size: 11px; color: #8b949e; border-top: 1px solid #e5e7eb; margin-top: 20px; }
 
   @media (max-width: 768px) {
@@ -101,8 +110,7 @@
     <div class="card"><h3>Delivery Status</h3><canvas id="deliveryChart" height="220"></canvas></div>
   </div>
   <div class="grid-2">
-    <div class="card"><h3>Payment Status</h3><canvas id="paymentChart" height="200"></canvas></div>
-    <div class="card"><h3>Weekend vs Weekday Orders</h3><canvas id="weekendChart" height="200"></canvas></div>
+    <div class="card span-2"><h3>Payment Status</h3><canvas id="paymentChart" height="80"></canvas></div>
   </div>
 </div>
 
@@ -112,7 +120,7 @@
     <div class="card"><h3>Revenue by Category</h3><canvas id="catRevenueChart" height="200"></canvas></div>
     <div class="card"><h3>Orders by Category</h3><canvas id="catOrdersChart" height="200"></canvas></div>
   </div>
-  <div class="card"><h3>Top 10 Brands by Revenue</h3><canvas id="brandChart" height="110"></canvas></div>
+  <div class="card"><h3>Top 10 Brands by Revenue</h3><div id="brandTable"></div></div>
 </div>
 
 <!-- ── PAGE 4: MAP ── -->
@@ -146,8 +154,6 @@ const profit  = [5951711,6836723,6676533,6849149,6521380,6811179,6787643,6566872
 const orderStatus   = { labels: ["Completed","Returned","Pending","Cancelled","Processing"], data: [674481,96191,96064,48311,48275] };
 const deliveryStatus= { labels: ["Delivered","In Transit","Failed","Pending"], data: [723258,144058,48165,47889] };
 const paymentStatus = { labels: ["Paid","Pending","Failed"], data: [864756,48101,47952] };
-const weekendData   = { labels: ["Weekday","Weekend"], data: [685953,274856] };
-
 const categories = ["Electronics","Home","Sports","Health","Clothing"];
 const catRevenue  = [134715607,84566472,70229125,55335619,43567713];
 const catOrders   = [192605,193151,193050,192161,192355];
@@ -197,7 +203,7 @@ new Chart(document.getElementById('trendChart'), {
     plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => " " + fmt(ctx.raw) } } },
     scales: {
       x: { ticks: { maxRotation: 45, font: { size: 11 } } },
-      y: { ticks: { callback: v => fmt(v) } }
+      y: { min: 4000000, ticks: { callback: v => fmt(v) } }
     }
   }
 });
@@ -223,13 +229,6 @@ new Chart(document.getElementById('paymentChart'), {
   options: { plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => " " + ctx.label + ": " + ctx.raw.toLocaleString() } } }, cutout: '60%' }
 });
 
-// Weekend bar
-new Chart(document.getElementById('weekendChart'), {
-  type: 'bar',
-  data: { labels: weekendData.labels, datasets: [{ data: weekendData.data, backgroundColor: ['#3b82d4','#7c5cd8'] }] },
-  options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => " " + ctx.raw.toLocaleString() } } }, scales: { y: { ticks: { callback: v => (v/1e3).toFixed(0)+'K' } } } }
-});
-
 // Category revenue bar
 new Chart(document.getElementById('catRevenueChart'), {
   type: 'bar',
@@ -244,11 +243,26 @@ new Chart(document.getElementById('catOrdersChart'), {
   options: { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => " " + ctx.raw.toLocaleString() } } }, scales: { x: { ticks: { callback: v => (v/1e3).toFixed(0)+'K' } } } }
 });
 
-// Brand bar
-new Chart(document.getElementById('brandChart'), {
-  type: 'bar',
-  data: { labels: brands, datasets: [{ label: 'Revenue', data: brandRevenue, backgroundColor: '#3b82d4' }] },
-  options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => " " + fmt(ctx.raw) } } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }
+// Brand logo table
+const brandDomains = {
+  "Samsung":"samsung.com","Dell":"dell.com","Sony":"sony.com","Xiaomi":"xiaomi.com",
+  "Fitbit":"fitbit.com","GoPro":"gopro.com","Philips":"philips.com","Huawei":"huawei.com",
+  "Baseus":"baseus.com","JBL":"jbl.com"
+};
+const maxBrandRev = Math.max(...brandRevenue);
+const brandTableEl = document.getElementById('brandTable');
+brands.forEach((b, i) => {
+  const pct = (brandRevenue[i] / maxBrandRev * 100).toFixed(1);
+  const domain = brandDomains[b];
+  const logoUrl = `https://logo.clearbit.com/${domain}`;
+  brandTableEl.innerHTML += `
+    <div class="brand-row">
+      <img class="brand-logo" src="${logoUrl}" alt="${b}"
+           onerror="this.outerHTML='<div class=\\'brand-fallback\\'>${b[0]}</div>'"/>
+      <span class="brand-name">${b}</span>
+      <div class="brand-bar-bg"><div class="brand-bar-fill" style="width:${pct}%"></div></div>
+      <span class="brand-rev">${fmt(brandRevenue[i])}</span>
+    </div>`;
 });
 
 // ── COUNTRY TABLE ─────────────────────────────────────────────────────────────
@@ -268,8 +282,9 @@ countryData.forEach(d => {
 function initMap() {
   window._mapInited = true;
   const map = L.map('map').setView([30, 10], 2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO', maxZoom: 10
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 10
   }).addTo(map);
 
   // Country centroids
