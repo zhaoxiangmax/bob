@@ -85,6 +85,9 @@
   <button onclick="showPage('status', this)">📦 Order Status</button>
   <button onclick="showPage('categories', this)">🏷️ Categories &amp; Brands</button>
   <button onclick="showPage('map', this)">🌍 Global Map</button>
+  <button onclick="showPage('brands', this)">📈 Brand Revenue</button>
+  <button onclick="showPage('forecast', this)">🔮 Forecast</button>
+  <button onclick="showPage('brandforecast', this)">🔮 Brand Forecast</button>
 </nav>
 
 <!-- ── PAGE 1: KPI ── -->
@@ -97,9 +100,9 @@
     <div class="kpi-card teal"><div class="label">Avg Profit Margin</div><div class="value">39.5%</div><div class="sub">Across all orders</div></div>
     <div class="kpi-card red"><div class="label">Avg Delivery</div><div class="value">7.5 days</div><div class="sub">1 – 14 day range</div></div>
   </div>
-  <div class="card">
-    <h3>Monthly Revenue &amp; Profit</h3>
-    <canvas id="trendChart" height="90"></canvas>
+  <div class="grid-2">
+    <div class="card"><h3>Monthly Revenue</h3><canvas id="revChart" height="160"></canvas></div>
+    <div class="card"><h3>Monthly Profit</h3><canvas id="profitChart" height="160"></canvas></div>
   </div>
 </div>
 
@@ -143,6 +146,61 @@
   </div>
 </div>
 
+<!-- ── PAGE 5: BRAND REVENUE ── -->
+<div id="brands" class="page">
+  <div class="card" style="margin-bottom:20px;">
+    <h3>Monthly Revenue by Brand</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="brandToggles"></div>
+    <canvas id="brandTrendChart" height="110"></canvas>
+  </div>
+</div>
+
+<!-- ── PAGE 7: BRAND FORECAST ── -->
+<div id="brandforecast" class="page">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+    <label style="font-weight:600;font-size:13px;">Select Brand:</label>
+    <select id="bfBrandSelect" style="padding:6px 12px;border-radius:6px;border:1px solid #e5e7eb;font-size:13px;background:#fff;cursor:pointer;"></select>
+    <span style="font-size:12px;color:#57606a;">OLS linear regression · 23 months history · 6-month horizon · 95% CI</span>
+  </div>
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="kpi-card blue"><div class="label">Forecast Revenue (avg)</div><div class="value" id="bfKpiRev">—</div><div class="sub">Monthly avg, next 6 mo</div></div>
+    <div class="kpi-card green"><div class="label">Forecast Profit (avg)</div><div class="value" id="bfKpiProfit">—</div><div class="sub">Monthly avg, next 6 mo</div></div>
+    <div class="kpi-card orange"><div class="label">Forecast Return Rate</div><div class="value" id="bfKpiReturn">—</div><div class="sub">Monthly avg, next 6 mo</div></div>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h3>Revenue Forecast</h3><canvas id="bfRevChart" height="220"></canvas></div>
+    <div class="card"><h3>Profit Forecast</h3><canvas id="bfProfitChart" height="220"></canvas></div>
+    <div class="card"><h3>Return Rate Forecast</h3><canvas id="bfReturnChart" height="220"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:20px;">
+    <h3>6-Month Forecast Summary</h3>
+    <table class="country-table">
+      <thead><tr><th>Month</th><th>Revenue</th><th>Rev Lower</th><th>Rev Upper</th><th>Profit</th><th>Return Rate</th><th>Ret. Lower</th><th>Ret. Upper</th></tr></thead>
+      <tbody id="bfTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── PAGE 6: FORECAST ── -->
+<div id="forecast" class="page">
+  <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom: 20px;">
+    <div class="kpi-card blue"><div class="label">Forecast Method</div><div class="value" style="font-size:16px">Linear Trend</div><div class="sub">OLS on 23 full months</div></div>
+    <div class="kpi-card green"><div class="label">Horizon</div><div class="value" style="font-size:16px">6 Months</div><div class="sub">Feb – Jul 2026</div></div>
+    <div class="kpi-card purple"><div class="label">Confidence Band</div><div class="value" style="font-size:16px">95%</div><div class="sub">±1.96 × residual std</div></div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <h3>Revenue Forecast — Feb to Jul 2026</h3>
+    <canvas id="forecastChart" height="100"></canvas>
+  </div>
+  <div class="card">
+    <h3>Forecast Values</h3>
+    <table class="country-table">
+      <thead><tr><th>Month</th><th>Forecast</th><th>Lower (95%)</th><th>Upper (95%)</th></tr></thead>
+      <tbody id="forecastTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
 <footer>Ecommerce Orders Dashboard &nbsp;·&nbsp; Hackathon 2026 &nbsp;·&nbsp; Data: ecommerce.orders</footer>
 
 <script>
@@ -150,6 +208,184 @@
 const months = ["Feb 24","Mar 24","Apr 24","May 24","Jun 24","Jul 24","Aug 24","Sep 24","Oct 24","Nov 24","Dec 24","Jan 25","Feb 25","Mar 25","Apr 25","May 25","Jun 25","Jul 25","Aug 25","Sep 25","Oct 25","Nov 25","Dec 25","Jan 26"];
 const revenue = [14901455,17122429,16714501,17155381,16377532,17057993,17037670,16469699,16910658,16309784,16748122,17055519,15436889,16869512,16435994,16898547,16238760,17013005,16941105,16283229,16973574,16211355,16937774,6314048];
 const profit  = [5951711,6836723,6676533,6849149,6521380,6811179,6787643,6566872,6756966,6513059,6691820,6806675,6164124,6721615,6562170,6735238,6474563,6792030,6745911,6514400,6771423,6458214,6781294,2511279];
+
+// ── BRAND MONTHLY DATA (23 complete months, Feb 2024 – Dec 2025) ──────────────
+const brandMonthly = {
+  "Adidas": [743469,848612,813376,866308,808431,850841,838751,797123,825403,836882,816254,849644,748851,859514,787921,885094,795028,864850,799686,831886,838455,831410,877388],
+  "Anker":  [713160,823039,790484,807220,855767,884305,828208,846725,831742,776053,878831,849508,766992,866698,796918,872159,812692,834363,841467,787375,841170,805677,889712],
+  "Apple":  [726694,843632,842723,830607,794595,838373,897157,852232,825371,804819,794576,824978,750659,827424,847396,835207,843368,884535,847745,816639,818134,836438,834396],
+  "Asus":   [761786,885017,856251,872251,762163,802891,830219,814788,885651,814537,837307,831348,802685,834832,828765,786809,804070,836530,854121,816281,829331,776492,834883],
+  "Baseus": [789563,799405,882778,860131,809790,848334,837483,829455,836081,811496,786460,875202,756395,898876,821511,847099,870303,848922,815618,838642,844714,802917,832696],
+  "Canon":  [723916,854123,848591,850373,867865,833413,864071,811789,844903,821004,851799,826441,779678,801587,785634,819818,804521,847438,873434,796911,859974,781655,858032],
+  "Dell":   [781197,868180,835405,880723,815565,847802,874599,833850,851959,838545,836079,859540,765923,818847,859049,866685,799471,870856,856779,818516,849636,827413,809148],
+  "Fitbit": [750311,835428,820647,868557,795889,831824,829713,811807,876533,867940,905573,830127,781754,821507,818586,875480,835016,845320,815084,828943,857378,812135,856005],
+  "GoPro":  [733085,857976,869546,850011,837059,925919,876339,870865,874807,793230,791915,843817,776416,867408,799587,818961,792134,867285,828366,768834,818058,862315,849065],
+  "HP":     [756806,847332,861013,857633,802945,877875,832484,808695,843744,820436,834745,861461,743646,809262,841941,878476,773386,826184,862608,808382,789123,823649,829755],
+  "Huawei": [715042,879809,859132,860403,826534,832482,856878,822428,845307,826471,801010,851071,764083,853129,885467,847094,811294,854974,871968,780095,871663,787363,847876],
+  "JBL":    [735497,852257,842254,872471,843556,886924,852760,815451,791239,788414,872126,846159,761798,826745,816028,858191,780490,860935,846501,826936,862584,816599,836325],
+  "Lenovo": [764345,869547,833113,864869,792335,875748,831666,799056,817480,794877,815836,867182,745904,845798,789894,810867,838925,835393,846635,819191,834239,814161,883210],
+  "Logitech":[753698,837693,774693,857420,833417,847395,826085,822445,827573,823784,823319,862614,781455,834784,830853,836655,837877,809441,866706,827712,913359,786866,840923],
+  "Nike":   [723190,858098,864281,828713,823398,814394,833530,816556,848881,782718,815888,879502,823724,870013,841152,852228,796123,861955,844168,809248,880944,838386,840498],
+  "Nikon":  [744508,866876,845739,847697,812516,845403,841340,807999,847820,810533,829870,848145,762001,847566,802418,841898,797219,843547,847047,804009,849437,810558,879497],
+  "Philips":[751693,865533,833386,851598,806834,867045,836002,818048,836924,797038,843136,834560,762274,840034,826072,837993,804892,873007,848126,810183,842705,795948,861290],
+  "Samsung":[787509,876011,849064,884086,836006,856637,872285,843697,866073,820218,845673,884196,783107,869133,851034,876036,831025,874710,861673,829855,876124,832115,880530],
+  "Sony":   [762062,862843,843629,854476,814268,848208,849940,820777,856256,809568,840989,847527,778176,842622,844399,855091,809474,856614,869283,817633,853499,817278,878657],
+  "Xiaomi": [760408,862696,845271,864393,822571,849453,847764,817099,843640,815009,841000,850994,779499,844568,833406,836900,807219,853965,843003,815037,858220,821048,859648]
+};
+const brandNames = Object.keys(brandMonthly).sort();
+const histMonths23 = ["Feb 24","Mar 24","Apr 24","May 24","Jun 24","Jul 24","Aug 24","Sep 24","Oct 24","Nov 24","Dec 24","Jan 25","Feb 25","Mar 25","Apr 25","May 25","Jun 25","Jul 25","Aug 25","Sep 25","Oct 25","Nov 25","Dec 25"];
+const BRAND_COLORS = ["#3b82d4","#22c55e","#f59e0b","#ef4444","#7c5cd8","#0d9488","#ea580c","#64748b","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#14b8a6","#f43f5e","#a855f7","#10b981","#fb923c","#6366f1","#34d399"];
+
+let activeBrands = new Set(["Samsung","Dell","Sony","Xiaomi","Fitbit"]);
+let brandChart = null;
+
+function buildBrandChart() {
+  const ctx = document.getElementById('brandTrendChart');
+  if (brandChart) brandChart.destroy();
+  const datasets = brandNames
+    .filter(b => activeBrands.has(b))
+    .map(b => {
+      const colorIdx = brandNames.indexOf(b) % BRAND_COLORS.length;
+      return { label: b, data: brandMonthly[b], borderColor: BRAND_COLORS[colorIdx], backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, borderWidth: 2 };
+    });
+  brandChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: histMonths23, datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => " " + ctx.dataset.label + ": $" + (ctx.raw/1e3).toFixed(0) + "K" } }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, font: { size: 11 } } },
+        y: { ticks: { callback: v => "$" + (v/1e3).toFixed(0) + "K" } }
+      }
+    }
+  });
+}
+
+function buildBrandToggles() {
+  const container = document.getElementById('brandToggles');
+  brandNames.forEach((b, i) => {
+    const colorIdx = i % BRAND_COLORS.length;
+    const btn = document.createElement('button');
+    btn.textContent = b;
+    btn.style.cssText = `padding:4px 10px;border-radius:20px;border:2px solid ${BRAND_COLORS[colorIdx]};background:${activeBrands.has(b) ? BRAND_COLORS[colorIdx] : 'transparent'};color:${activeBrands.has(b) ? '#fff' : BRAND_COLORS[colorIdx]};font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;`;
+    btn.onclick = function() {
+      if (activeBrands.has(b)) { if (activeBrands.size === 1) return; activeBrands.delete(b); btn.style.background='transparent'; btn.style.color=BRAND_COLORS[colorIdx]; }
+      else { activeBrands.add(b); btn.style.background=BRAND_COLORS[colorIdx]; btn.style.color='#fff'; }
+      buildBrandChart();
+    };
+    container.appendChild(btn);
+  });
+}
+
+// ── FORECAST (OLS linear regression, exclude partial Jan 26) ─────────────────
+(function buildForecast() {
+  // Use only the 23 complete months (indices 0–22, Feb 2024 – Dec 2025)
+  const histRev = revenue.slice(0, 23);
+  const n = histRev.length;
+  const xs = Array.from({length: n}, (_, i) => i);
+
+  // OLS: y = a + b*x
+  const sumX  = xs.reduce((a,v) => a+v, 0);
+  const sumY  = histRev.reduce((a,v) => a+v, 0);
+  const sumXY = xs.reduce((a,v,i) => a + v*histRev[i], 0);
+  const sumX2 = xs.reduce((a,v) => a + v*v, 0);
+  const b = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
+  const a = (sumY - b*sumX) / n;
+
+  // Residual std dev
+  const residuals = histRev.map((y,i) => y - (a + b*i));
+  const mse = residuals.reduce((s,r) => s + r*r, 0) / (n - 2);
+  const se  = Math.sqrt(mse);
+  const z95 = 1.96;
+
+  // Fitted values for history
+  const fitted = xs.map(x => a + b*x);
+
+  // 6-month forecast: indices 23–28 → Feb–Jul 2026
+  const forecastLabels = ["Feb 26","Mar 26","Apr 26","May 26","Jun 26","Jul 26"];
+  const forecastXs     = [23,24,25,26,27,28];
+  const forecastMid    = forecastXs.map(x => a + b*x);
+  const forecastLow    = forecastMid.map(v => v - z95*se);
+  const forecastHigh   = forecastMid.map(v => v + z95*se);
+
+  // ── Forecast chart ──────────────────────────────────────────────────────────
+  const histLabels = months.slice(0, 23);
+  const allLabels  = [...histLabels, ...forecastLabels];
+
+  // Pad arrays with null for alignment
+  const pad = (arr, before, after) => [...Array(before).fill(null), ...arr, ...Array(after).fill(null)];
+
+  new Chart(document.getElementById('forecastChart'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        // Actual history
+        {
+          label: 'Actual Revenue',
+          data: [...histRev, ...Array(6).fill(null)],
+          borderColor: '#3b82d4', backgroundColor: 'rgba(59,130,212,0.08)',
+          fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
+        },
+        // Fitted trend line (history only)
+        {
+          label: 'Trend (fitted)',
+          data: [...fitted, ...Array(6).fill(null)],
+          borderColor: '#f59e0b', borderDash: [5,3],
+          pointRadius: 0, borderWidth: 1.5, fill: false
+        },
+        // Forecast line
+        {
+          label: 'Forecast',
+          data: [...Array(23).fill(null), ...forecastMid],
+          borderColor: '#7c5cd8', backgroundColor: 'rgba(124,92,216,0.08)',
+          fill: false, tension: 0.3, pointRadius: 4, borderWidth: 2,
+          borderDash: [6,3]
+        },
+        // Upper bound (hidden from legend, used for fill)
+        {
+          label: '95% Upper',
+          data: [...Array(23).fill(null), ...forecastHigh],
+          borderColor: 'rgba(124,92,216,0.25)', backgroundColor: 'rgba(124,92,216,0.12)',
+          fill: '+1', pointRadius: 0, borderWidth: 1, borderDash: [4,4], tension: 0.3
+        },
+        // Lower bound
+        {
+          label: '95% Lower',
+          data: [...Array(23).fill(null), ...forecastLow],
+          borderColor: 'rgba(124,92,216,0.25)', backgroundColor: 'rgba(124,92,216,0.12)',
+          fill: false, pointRadius: 0, borderWidth: 1, borderDash: [4,4], tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { filter: i => !['95% Upper','95% Lower'].includes(i.text) } },
+        tooltip: { callbacks: { label: ctx => ctx.raw != null ? " " + ctx.dataset.label + ": " + fmt(ctx.raw) : null } }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, font: { size: 11 } } },
+        y: { min: 4000000, ticks: { callback: v => fmt(v) } }
+      }
+    }
+  });
+
+  // ── Forecast table ──────────────────────────────────────────────────────────
+  const ftbody = document.getElementById('forecastTableBody');
+  forecastLabels.forEach((lbl, i) => {
+    ftbody.innerHTML += `<tr>
+      <td><strong>${lbl}</strong></td>
+      <td style="color:#7c5cd8;font-weight:600">${fmt(forecastMid[i])}</td>
+      <td style="color:#57606a">${fmt(forecastLow[i])}</td>
+      <td style="color:#57606a">${fmt(forecastHigh[i])}</td>
+    </tr>`;
+  });
+})();
 
 const orderStatus   = { labels: ["Completed","Returned","Pending","Cancelled","Processing"], data: [674481,96191,96064,48311,48275] };
 const deliveryStatus= { labels: ["Delivered","In Transit","Failed","Pending"], data: [723258,144058,48165,47889] };
@@ -189,22 +425,25 @@ function showPage(id, btn) {
 
 // ── CHARTS ────────────────────────────────────────────────────────────────────
 // Trend
-new Chart(document.getElementById('trendChart'), {
+// Monthly Revenue chart
+new Chart(document.getElementById('revChart'), {
   type: 'line',
-  data: {
-    labels: months,
-    datasets: [
-      { label: 'Revenue', data: revenue, borderColor: '#3b82d4', backgroundColor: 'rgba(59,130,212,0.1)', fill: true, tension: 0.3, pointRadius: 2 },
-      { label: 'Profit',  data: profit,  borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)',  fill: true, tension: 0.3, pointRadius: 2 }
-    ]
-  },
+  data: { labels: months, datasets: [{ label: 'Revenue', data: revenue, borderColor: '#3b82d4', backgroundColor: 'rgba(59,130,212,0.12)', fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 }] },
   options: {
     responsive: true,
-    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => " " + fmt(ctx.raw) } } },
-    scales: {
-      x: { ticks: { maxRotation: 45, font: { size: 11 } } },
-      y: { min: 4000000, ticks: { callback: v => fmt(v) } }
-    }
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => " " + fmt(ctx.raw) } } },
+    scales: { x: { ticks: { maxRotation: 45, font: { size: 11 } } }, y: { min: 4000000, ticks: { callback: v => fmt(v) } } }
+  }
+});
+
+// Monthly Profit chart
+new Chart(document.getElementById('profitChart'), {
+  type: 'line',
+  data: { labels: months, datasets: [{ label: 'Profit', data: profit, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.12)', fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 }] },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => " " + fmt(ctx.raw) } } },
+    scales: { x: { ticks: { maxRotation: 45, font: { size: 11 } } }, y: { min: 2000000, ticks: { callback: v => fmt(v) } } }
   }
 });
 
