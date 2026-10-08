@@ -209,6 +209,27 @@ const months = ["Feb 24","Mar 24","Apr 24","May 24","Jun 24","Jul 24","Aug 24","
 const revenue = [14901455,17122429,16714501,17155381,16377532,17057993,17037670,16469699,16910658,16309784,16748122,17055519,15436889,16869512,16435994,16898547,16238760,17013005,16941105,16283229,16973574,16211355,16937774,6314048];
 const profit  = [5951711,6836723,6676533,6849149,6521380,6811179,6787643,6566872,6756966,6513059,6691820,6806675,6164124,6721615,6562170,6735238,6474563,6792030,6745911,6514400,6771423,6458214,6781294,2511279];
 
+const orderStatus   = { labels: ["Completed","Returned","Pending","Cancelled","Processing"], data: [674481,96191,96064,48311,48275] };
+const deliveryStatus= { labels: ["Delivered","In Transit","Failed","Pending"], data: [723258,144058,48165,47889] };
+const paymentStatus = { labels: ["Paid","Pending","Failed"], data: [864756,48101,47952] };
+const categories = ["Electronics","Home","Sports","Health","Clothing"];
+const catRevenue  = [134715607,84566472,70229125,55335619,43567713];
+const catOrders   = [192605,193151,193050,192161,192355];
+const brands        = ["Samsung","Dell","Sony","Xiaomi","Fitbit","GoPro","Philips","Huawei","Baseus","JBL"];
+const brandRevenue  = [19631715,19596475,19548958,19510343,19506188,19482857,19457868,19453128,19450082,19430475];
+const countryData = [
+  { country:"Netherlands", customers:96744, revenue:39043266 },
+  { country:"Italy",       customers:95981, revenue:38986308 },
+  { country:"Belgium",     customers:96546, revenue:38897494 },
+  { country:"Spain",       customers:96328, revenue:38896857 },
+  { country:"Australia",   customers:96106, revenue:38859957 },
+  { country:"United Kingdom", customers:96273, revenue:38846423 },
+  { country:"France",      customers:96439, revenue:38762419 },
+  { country:"Canada",      customers:96201, revenue:38749448 },
+  { country:"United States", customers:96057, revenue:38729492 },
+  { country:"Germany",     customers:95911, revenue:38642870 }
+];
+
 // ── BRAND MONTHLY DATA (23 complete months, Feb 2024 – Dec 2025) ──────────────
 const brandMonthly = {
   "Adidas": [743469,848612,813376,866308,808431,850841,838751,797123,825403,836882,816254,849644,748851,859514,787921,885094,795028,864850,799686,831886,838455,831410,877388],
@@ -549,28 +570,6 @@ function renderBrandForecast(brand) {
   });
 }
 
-const orderStatus   = { labels: ["Completed","Returned","Pending","Cancelled","Processing"], data: [674481,96191,96064,48311,48275] };
-const deliveryStatus= { labels: ["Delivered","In Transit","Failed","Pending"], data: [723258,144058,48165,47889] };
-const paymentStatus = { labels: ["Paid","Pending","Failed"], data: [864756,48101,47952] };
-const categories = ["Electronics","Home","Sports","Health","Clothing"];
-const catRevenue  = [134715607,84566472,70229125,55335619,43567713];
-const catOrders   = [192605,193151,193050,192161,192355];
-
-const brands        = ["Samsung","Dell","Sony","Xiaomi","Fitbit","GoPro","Philips","Huawei","Baseus","JBL"];
-const brandRevenue  = [19631715,19596475,19548958,19510343,19506188,19482857,19457868,19453128,19450082,19430475];
-
-const countryData = [
-  { country:"Netherlands", customers:96744, revenue:39043266 },
-  { country:"Italy",       customers:95981, revenue:38986308 },
-  { country:"Belgium",     customers:96546, revenue:38897494 },
-  { country:"Spain",       customers:96328, revenue:38896857 },
-  { country:"Australia",   customers:96106, revenue:38859957 },
-  { country:"United Kingdom", customers:96273, revenue:38846423 },
-  { country:"France",      customers:96439, revenue:38762419 },
-  { country:"Canada",      customers:96201, revenue:38749448 },
-  { country:"United States", customers:96057, revenue:38729492 },
-  { country:"Germany",     customers:95911, revenue:38642870 }
-];
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const fmt = n => n >= 1e6 ? "$" + (n/1e6).toFixed(1) + "M" : n >= 1e3 ? (n/1e3).toFixed(1) + "K" : n;
